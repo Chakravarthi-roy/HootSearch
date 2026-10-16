@@ -1,6 +1,6 @@
 from pypdf import PdfReader
 
-def chunk_text(text, size=1000,overlap=200):
+def chunk_text(text, size=400,overlap=80):
     chunks = []
     start = 0
     while start < len(text):

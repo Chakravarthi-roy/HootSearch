@@ -1,5 +1,6 @@
 env/
 docs/
 __pycache__/
-chroma_db/
+Chroma_db/
 .DS_Store
+.env

@@ -3,6 +3,7 @@ import argparse
 from ingest import extract, chunk_text
 from store import store, search
 from llm import answer
+from pipeline import sync, watch
 
 def main():
     parser = argparse.ArgumentParser(description="Document Q&A")
@@ -11,17 +12,18 @@ def main():
     parser.add_argument("--store", action="store_true", help="embed chunks and save them")
     parser.add_argument("--ask", help="ask a question and get an answer")
     parser.add_argument("--search", help="show top matching chunks")
+    parser.add_argument("--sync", action="store_true", help="ingest/remove new PDFs/deleted ones")
+    parser.add_argument("--watch", "--watch", action="store_true", help="keep watching docs/ to sync automatically")
     args = parser.parse_args()
 
     if args.search:
-    hits = search(args.search, k=3)
-    if not hits:
-        print("Nothing stored yet. Run --store on a PDF first.")
-    for rank, h in enumerate(hits, 1):
-        print(f"#{rank}  distance={h['distance']:.3f}  "
-              f"{h['source']} (chunk {h['chunk']})")
-        print(h["text"])
-        print()
+        hits = search(args.search, k=3)
+        if not hits:
+            print("Nothing stored yet. Run --store")
+        for rank, h in enumerate(hits, 1):
+            print(f"#{rank}  distance={h['distance']:.3f}  "
+                  f"{h['source']} (chunk {h['chunk']})")
+            print(h["text"], end="\n\n")
     return
 
     if args.ask:
@@ -57,7 +59,19 @@ def main():
             print(f"{i} \n{c}", end="\n\n")
     else:
         print(text)
+
+    if args.sync:
+        added, removed = sync()
+        print(f"sync done, {added} added & {removed} removed")
+        return
+
+    if sync.watched:
+        watch()
+        return
 	
 
 if __name__ == "__main__":
     main()
+
+
+    
