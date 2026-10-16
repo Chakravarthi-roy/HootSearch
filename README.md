@@ -52,3 +52,5 @@ Drop a PDF into `docs/` and it gets ingested within a few seconds. Delete one an
 If an answer is wrong, run the same question with `--search`. If the right chunk isn't in the results, retrieval is the problem (chunking, embedding, k). If it is there, the prompt or the model is the problem. Fine tune the values based on your docs to find the optimal k. It is just an experiment game sometimes. 
 
 
+
+
