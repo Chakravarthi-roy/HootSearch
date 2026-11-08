@@ -2,8 +2,14 @@ import argparse
 from ingest import extract, chunk_text
 from store import store, search
 from llm import answer
-from pipeline import sync, watch
+from pipeline import sync, watch, start_watcher
 import os
+
+def app():
+    added, removed = sync()
+    print(f"Synced docs: {added} added, {removed} removed")
+    start_watcher()
+    chat()
 
 def chat():
     print("Ask! Type 'exit' to quit:)")
@@ -79,7 +85,9 @@ def main():
         return
 
     if not args.file:
-        parser.error("include a file in the command")
+        app()
+        return
+        # parser.error("include a file in the command")
 
     text = extract(args.file)
     # print(text)
