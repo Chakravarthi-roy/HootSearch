@@ -5,9 +5,31 @@ from llm import answer
 from pipeline import sync, watch
 import os
 
+def chat():
+    print("Ask! Type 'exit' to quit:)")
+    while True:
+        try:
+            q = input("\nQuestion:").strip()
+        except(KeyboardInterrupt, EOFError):
+            print()
+            break
+
+        if q.lower() in ('exit', 'quit'):
+            break
+        if not q:
+            continue
+
+        hits = search(q)
+        a = answer(question, hits)
+        print("\n" + a)
+        print("\nRetrieved from chunks:")
+        for i, h in enumerate(hits, 1):
+            print(f"  [{i}] {h['source']} chunk {h['chunk']} (distance {h['distance']:.2f})")
+
 def main():
     parser = argparse.ArgumentParser(description="Document Q&A")
     parser.add_argument("file", nargs="?", help="path to the PDF")
+    parser.add_argument("--chat", action="store_true", help="ask questions in a loop")
     parser.add_argument("--chunks", action="store_true", help="show chunks of the text")
     parser.add_argument("--store", action="store_true", help="embed chunks and save them")
     parser.add_argument("--ask", help="ask a question and get an answer")
@@ -24,6 +46,10 @@ def main():
 
     if args.watch:
         watch()
+        return
+
+    if args.chat:
+        chat()
         return
 
     if args.search:
