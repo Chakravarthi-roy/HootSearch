@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/style.css">
+  <title>DocQA</title>
+</head>
+<body>
+  <aside id="sidebar">
+    <h1>DocQA</h1>
+    <button id="upload-btn">Upload PDF</button>
+
+    <h2>Documents</h2>
+    <ul id="file-list"></ul>
+
+    <h2>Recent</h2>
+    <ul id="recent-list"></ul>
+  </aside>
+
+  <main id="chat">
+    <div id="messages">
+      <div class="message user">What is the Canteen App built with?</div>
+      <div class="message assistant">
+        <p>Python, FastAPI, React and PostgreSQL [1].</p>
+        <div class="sources"><span class="chip">[1] resume.pdf · chunk 2</span></div>
+        <small class="meta">2.1 s</small>
+      </div>
+    </div>
+
+    <form id="ask-form">
+      <input id="question" type="text" placeholder="Ask about your documents..." autocomplete="off">
+      <button type="submit">Ask</button>
+    </form>
+  </main>
+
+  <section id="chunk-panel" hidden>
+    <header>
+      <h2 id="chunk-title"></h2>
+      <button id="chunk-close">Close</button>
+    </header>
+    <div id="chunk-list"></div>
+  </section>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
