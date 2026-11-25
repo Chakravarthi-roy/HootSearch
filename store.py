@@ -2,16 +2,7 @@ import chromadb
 
 _client = chromadb.PersistentClient(path="Chroma_db")
 
-
-def get_collection():
-    return _client.get_or_create_collection("docs")
-
-
-def source_exists(name):
-    res = get_collection().get(where={"source": name}, limit=1)
-    return len(res["ids"]) > 0
-
-
+# Hashing
 def get_source_hash(name):
     res = get_collection().get(where={"source": name}, limit=1,
                                include=["metadatas"])
@@ -19,6 +10,13 @@ def get_source_hash(name):
         return None
     return res["metadatas"][0].get("hash")
 
+def get_collection():
+    return _client.get_or_create_collection("docs")
+
+# sources and functions
+def source_exists(name):
+    res = get_collection().get(where={"source": name}, limit=1)
+    return len(res["ids"]) > 0
 
 def list_sources():
     res = get_collection().get(include=["metadatas"])
@@ -60,3 +58,11 @@ def search(question, k=6):
         hits.append({"text": text, "source": meta["source"],
                      "chunk": meta["chunk"], "distance": dist})
     return hits
+
+# Delete the data in the database
+def reset_collection():
+    client = chromadb.PersistentClient(path="Chroma_db")
+    try:
+        client.delete_collection("docs")
+    except Exception:
+        pass

@@ -9,14 +9,12 @@ from store import (store, source_exists, get_source_hash,
 
 _sync_lock = threading.Lock()
 
-
 def file_hash(path):
     h = hashlib.sha256()
     with open(path, "rb") as f:
         for block in iter(lambda: f.read(1 << 20), b""):
             h.update(block)
     return h.hexdigest()
-
 
 def ingest(path):
     name = os.path.basename(path)
@@ -39,7 +37,6 @@ def ingest(path):
     store(chunks, name, new_hash)
     print(f"File {name}: {len(chunks)} chunks stored")
     return True
-
 
 def sync(folder="docs"):
     with _sync_lock:
@@ -71,7 +68,7 @@ def sync(folder="docs"):
 
         return added, removed
 
-
+# Watch functions
 def watch(folder="docs", interval=3):
     print(f"Watching {folder}/ every {interval}s. Press Ctrl+C to stop.")
     try:
@@ -84,8 +81,16 @@ def watch(folder="docs", interval=3):
     except KeyboardInterrupt:
         print("\nWatch stopped.")
 
-
 def start_watcher(folder="docs", interval=3):
     t = threading.Thread(target=watch, args=(folder, interval), daemon=True)
     t.start()
     return t
+
+def delete_document(name, folder="docs"):
+    name = os.path.basename(name)
+    path = os.path.join(folder, name)
+    found = source_exists(name) or os.path.exists(path)
+    if os.path.exists(path):
+        os.remove(path)
+    delete_source(name)
+    return found

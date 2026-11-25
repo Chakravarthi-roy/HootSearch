@@ -9,13 +9,11 @@ Rules:
 - Never use outside knowledge, even if you know the answer.
 - The sources are raw text extracted from PDFs and may have glitches (glued words, odd spacing). Read past them."""
 
-
 def build_context(hits):
     parts = []
     for i, h in enumerate(hits, 1):
         parts.append(f"[{i}] (From {h['source']}, chunk {h['chunk']})\n{h['text']}")
     return "\n\n".join(parts)
-
 
 def answer(question, hits):
     if not hits:

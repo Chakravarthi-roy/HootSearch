@@ -1,18 +1,15 @@
 import argparse
-import os
 
-from ingest import extract, chunk_text
-from store import store, search
+from ingest import extract
 from llm import answer
-from pipeline import sync, watch, start_watcher, file_hash
-
+from pipeline import sync, watch, start_watcher, delete_document
+from store import search, list_sources, get_chunks, reset_collection
 
 def app():
     added, removed = sync()
     print(f"Synced docs: {added} added, {removed} removed")
     start_watcher()
     chat()
-
 
 def chat():
     print("Ask! Type 'exit' to quit:)")
@@ -35,17 +32,17 @@ def chat():
         for i, h in enumerate(hits, 1):
             print(f"  [{i}] {h['source']} chunk {h['chunk']} (distance {h['distance']:.2f})")
 
-
 def main():
     parser = argparse.ArgumentParser(description="Document Q&A")
-    parser.add_argument("file", nargs="?", help="path to the PDF")
-    parser.add_argument("--chat", action="store_true", help="ask questions in a loop")
-    parser.add_argument("--chunks", action="store_true", help="show chunks of the text")
-    parser.add_argument("--store", action="store_true", help="embed chunks and save them")
     parser.add_argument("--ask", help="ask a question and get an answer")
+    parser.add_argument("--list", action="store_true", help="list stored documents")
     parser.add_argument("--search", help="show top matching chunks")
+    parser.add_argument("--show", help="show the stored chunks of one document")
     parser.add_argument("--sync", action="store_true", help="ingest new PDFs / remove deleted ones")
+    parser.add_argument("--text", metavar="FILE", help="print the raw text extracted from a PDF")
     parser.add_argument("--watch", action="store_true", help="keep watching docs/ to sync automatically")
+    parser.add_argument("--reset", action="store_true", help="wipe the database (PDFs are kept)")
+    parser.add_argument("--delete", metavar="NAME", help="delete a document and its chunks")
     args = parser.parse_args()
 
     # These options don't need a file, so they come before the file checks.
@@ -58,10 +55,6 @@ def main():
         watch()
         return
 
-    if args.chat:
-        chat()
-        return
-
     if args.search:
         hits = search(args.search, k=3)
         if not hits:
@@ -72,6 +65,25 @@ def main():
             print(h["text"], end="\n\n")
         return
 
+    if args.list:
+        sources = list_sources()
+        if not sources:
+            print("Nothing stored yet. Run --sync")
+        for s in sources:
+            print(f"  {s}  ({len(get_chunks(s))} chunks)")
+        return
+
+    if args.show:
+        chunks = get_chunks(args.show)
+        if not chunks:
+            print(f"No stored document named {args.show}. Try --list")
+            return
+        print(f"{args.show}: {len(chunks)} chunks")
+        for c in chunks:
+            print(f"--- chunk {c['chunk']} ({len(c['text'])} chars) ---")
+            print(c["text"], end="\n\n")
+        return
+
     if args.ask:
         hits = search(args.ask)
         print(answer(args.ask, hits))
@@ -80,24 +92,27 @@ def main():
             print(f"  [{i}] {h['source']} chunk {h['chunk']} (distance {h['distance']:.2f})")
         return
 
-    if not args.file:
-        app()
+    if args.text:
+        print(extract(args.text))
         return
 
-    text = extract(args.file)
+    if args.reset:
+        if input("Wipe the whole database? PDFs in docs/ are kept. [y/N] ").strip().lower() == "y":
+            reset_collection()
+            print("Database cleared. Run --sync to rebuild.")
+        return
 
-    if args.store:
-        chunks = chunk_text(text)
-        total = store(chunks, os.path.basename(args.file), file_hash(args.file))
-        print(f"stored {len(chunks)} chunks, collection holds {total}")
-    elif args.chunks:
-        chunks = chunk_text(text)
-        print(f"{len(text)} doc length -> {len(chunks)} size chunks")
-        for i, c in enumerate(chunks[:3]):
-            print(f"{i} \n{c}", end="\n\n")
-    else:
-        print(text)
+    if args.delete:
+        msg = f"Delete {args.delete} from docs/ and the database? This cannot be undone. [y/N] "
+        if input(msg).strip().lower() != "y":
+            return
+        if delete_document(args.delete):
+            print(f"Deleted {args.delete}")
+        else:
+            print(f"No document named {args.delete}. Try --list")
+        return
 
+    app()
 
 if __name__ == "__main__":
     main()

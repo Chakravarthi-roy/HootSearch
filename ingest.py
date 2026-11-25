@@ -1,6 +1,5 @@
 from pypdf import PdfReader
 
-
 def chunk_text(text, size=900, overlap=150):
     chunks = []
     start = 0
@@ -17,7 +16,6 @@ def chunk_text(text, size=900, overlap=150):
             break
         start = max(end - overlap, start + 1)
     return chunks
-
 
 def extract(path):
     reader = PdfReader(path)
